@@ -1,0 +1,63 @@
+services:
+  waveguard-db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-waveguard}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-waveguard}
+      - POSTGRES_DB=${POSTGRES_DB:-waveguard}
+    volumes:
+      - waveguard-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U waveguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  waveguard-backend:
+    build: ./backend
+    restart: always
+    depends_on:
+      waveguard-db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-waveguard}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-waveguard}
+      - POSTGRES_DB=${POSTGRES_DB:-waveguard}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-waveguard}:${POSTGRES_PASSWORD:-waveguard}@waveguard-db:5432/${POSTGRES_DB:-waveguard}
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
+      - WAVEGUARD_ARMED_DEFAULT=${WAVEGUARD_ARMED_DEFAULT:-true}
+      - WAVEGUARD_Z_THRESHOLD=${WAVEGUARD_Z_THRESHOLD:-2.5}
+      - WAVEGUARD_DEBOUNCE_SECONDS=${WAVEGUARD_DEBOUNCE_SECONDS:-10}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+
+  waveguard-collector:
+    build: ./collector
+    restart: always
+    network_mode: host # Needed for iw access to wlan0 on Linux
+    privileged: true   # Needed for iw access
+    environment:
+      - WAVEGUARD_BACKEND_URL=http://localhost:${BACKEND_PORT:-8000}
+      - WAVEGUARD_ROUTER_ID=${WAVEGUARD_ROUTER_ID:-router-1}
+      - WAVEGUARD_TRACKED_MACS=${WAVEGUARD_TRACKED_MACS}
+      - WAVEGUARD_COLLECTION_INTERVAL_SECONDS=${WAVEGUARD_COLLECTION_INTERVAL_SECONDS:-1.0}
+      - WAVEGUARD_METRIC_PROVIDER=${WAVEGUARD_METRIC_PROVIDER:-stub}
+      - WAVEGUARD_INTERFACE=${WAVEGUARD_INTERFACE:-wlan0}
+    # Note: network_mode: host means it can't reach other containers by service name easily (e.g. waveguard-backend)
+    # UNLESS we use localhost and the ports are exposed.
+    # Since backend exposes 8000, localhost:8000 works if collector is on host net.
+
+  waveguard-frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}/api/v1
+      - NEXT_PUBLIC_WS_URL=ws://localhost:${BACKEND_PORT:-8000}/ws/live
+
+volumes:
+  waveguard-db-data:

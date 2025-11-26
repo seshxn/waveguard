@@ -1,0 +1,50 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from contextlib import asynccontextmanager
+from app.db.session import engine
+from app.models import models
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(models.SQLModel.metadata.create_all)
+    yield
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
+)
+
+from app.api.api_v1.api import api_router
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+if settings.BACKEND_CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+@app.get("/")
+def root():
+    return {"message": "WaveGuard Backend API"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+from fastapi import WebSocket, WebSocketDisconnect
+from app.websockets.manager import manager
+
+@app.websocket("/ws/live")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
