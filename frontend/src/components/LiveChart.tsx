@@ -1,7 +1,5 @@
-'use client';
-
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Sample } from '@/lib/api';
+import { type Sample } from '../lib/api';
 
 interface LiveChartProps {
     data: Sample[];

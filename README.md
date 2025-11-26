@@ -8,7 +8,7 @@ WaveGuard consists of three main services:
 
 1.  **Collector**: A Python service running on the Pi that gathers Wi-Fi signal metrics (RSSI, noise, etc.) using `iw` or a router API and sends them to the backend.
 2.  **Backend**: A FastAPI service that ingests samples, runs a sliding-window Z-score detection algorithm, and manages configuration and alerts.
-3.  **Frontend**: A Next.js dashboard for real-time visualization of RSSI data, event logs, and system configuration.
+3.  **Frontend**: A Vite + React dashboard for real-time visualization of RSSI data, event logs, and system configuration.
 
 ## Setup
 
@@ -22,7 +22,7 @@ WaveGuard consists of three main services:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/waveguard.git
+    git clone https://github.com/seshxn/waveguard.git
     cd waveguard
     ```
 

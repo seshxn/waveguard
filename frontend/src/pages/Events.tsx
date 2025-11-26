@@ -1,7 +1,5 @@
-'use client';
-
 import { useEffect, useState } from 'react';
-import { api, MotionEvent } from '@/lib/api';
+import { api, type MotionEvent } from '../lib/api';
 
 const EventsPage = () => {
     const [events, setEvents] = useState<MotionEvent[]>([]);

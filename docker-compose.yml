@@ -51,13 +51,14 @@ services:
     # Since backend exposes 8000, localhost:8000 works if collector is on host net.
 
   waveguard-frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:${BACKEND_PORT:-8000}/api/v1
+        - VITE_WS_URL=ws://localhost:${BACKEND_PORT:-8000}/ws/live
     restart: always
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}/api/v1
-      - NEXT_PUBLIC_WS_URL=ws://localhost:${BACKEND_PORT:-8000}/ws/live
+      - "${FRONTEND_PORT:-3000}:80"
 
 volumes:
   waveguard-db-data:
