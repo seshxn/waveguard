@@ -17,7 +17,7 @@ export interface MotionEvent {
     router_id: string;
     client_mac: string;
     severity: string;
-    details: any;
+    details: unknown;
 }
 
 export interface Config {
