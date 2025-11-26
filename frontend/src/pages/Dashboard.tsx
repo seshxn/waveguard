@@ -1,9 +1,7 @@
-'use client';
-
 import { useEffect, useState } from 'react';
-import { useWebSocket } from '@/lib/useWebSocket';
-import { api, Sample, MotionEvent, Config } from '@/lib/api';
-import LiveChart from '@/components/LiveChart';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { api, type Sample, type MotionEvent, type Config } from '../lib/api';
+import LiveChart from '../components/LiveChart';
 
 const Dashboard = () => {
     const { isConnected, lastSample, lastEvent } = useWebSocket();

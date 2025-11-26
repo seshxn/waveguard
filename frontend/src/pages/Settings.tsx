@@ -1,10 +1,7 @@
-'use client';
-
 import { useEffect, useState } from 'react';
-import { api, Config } from '@/lib/api';
+import { api } from '../lib/api';
 
 const SettingsPage = () => {
-    const [config, setConfig] = useState<Config | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -16,7 +13,6 @@ const SettingsPage = () => {
 
     useEffect(() => {
         api.getConfig().then(c => {
-            setConfig(c);
             setTrackedClients(c.tracked_clients.join(', '));
             setZThreshold(String(c.z_threshold));
             setDebounce(String(c.debounce_seconds));
